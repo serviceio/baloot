@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة بلوت - الغرفة الصوتية</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --primary: #0f3460;
+            --accent: #e94560;
+            --text: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: var(--panel-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 { color: var(--accent); margin-bottom: 20px; }
+        input {
+            width: 80%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #d13d56; }
+        #room-screen { display: none; }
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .player-item {
+            background-color: var(--primary);
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status {
+            font-size: 12px;
+            color: #4caf50;
+        }
+        /* لإخفاء عناصر الصوت لأننا لا نحتاج لرؤيتها، فقط سماعها */
+        #audio-elements { display: none; } 
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="container">
+        <h1>🎮 غرفة البلوت</h1>
+        <p>الحد الأقصى للغرفة: 8 لاعبين</p>
+        <input type="text" id="player-name" placeholder="أدخل اسمك هنا...">
+        <button id="join-btn">دخول الغرفة</button>
+        <p id="error-msg" style="color: var(--accent); display: none; margin-top: 15px;"></p>
+    </div>
+
+    <div id="room-screen" class="container">
+        <h1>♠️ طاولة اللعب ♥️</h1>
+        <p>أنت متصل الآن بالمحادثة الصوتية</p>
+        <button id="mute-btn">كتم الميكروفون 🎤</button>
+        <ul id="players-ul" class="player-list">
+            </ul>
+    </div>
+
+    <div id="audio-elements"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, onDisconnect, push, child, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        // مفاتيح مشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3qG2s1puphlNnvCE2N8bznoHnF-cxeJw",
+            authDomain: "balo-ot.firebaseapp.com",
+            databaseURL: "https://balo-ot-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "balo-ot",
+            storageBucket: "balo-ot.firebasestorage.app",
+            messagingSenderId: "444649840040",
+            appId: "1:444649840040:web:f9d8ff3dd47ef691a5119d",
+            measurementId: "G-ZFVF6QQT48"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // متغيرات اللعبة والصوت
+        let myId = null;
+        let myName = "";
+        let localStream = null;
+        let isMuted = false;
+        const peers = {}; // لحفظ اتصالات اللاعبين الآخرين
+        const maxPlayers = 8;
+        
+        // سيرفرات جوجل المجانية لربط الصوت
+        const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+        // عناصر الواجهة
+        const loginScreen = document.getElementById('login-screen');
+        const roomScreen = document.getElementById('room-screen');
+        const playerNameInput = document.getElementById('player-name');
+        const joinBtn = document.getElementById('join-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const playersUl = document.getElementById('players-ul');
+        const muteBtn = document.getElementById('mute-btn');
+        const audioElements = document.getElementById('audio-elements');
+
+        // دالة الدخول للغرفة
+        joinBtn.addEventListener('click', async () => {
+            myName = playerNameInput.value.trim();
+            if (!myName) {
+                showError("الرجاء إدخال اسمك!");
+                return;
+            }
+
+            joinBtn.disabled = true;
+            joinBtn.innerText = "جاري التحقق...";
+
+            const playersRef = ref(db, 'rooms/baloot/players');
+            const snapshot = await get(playersRef);
+            
+            let currentPlayersCount = 0;
+            if (snapshot.exists()) {
+                currentPlayersCount = Object.keys(snapshot.val()).length;
+            }
+
+            if (currentPlayersCount >= maxPlayers) {
+                showError("عذراً، الغرفة ممتلئة حالياً (8/8).");
+                joinBtn.disabled = false;
+                joinBtn.innerText = "دخول الغرفة";
+                return;
+            }
+
+            // طلب إذن الميكروفون قبل الدخول الفعلي
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            } catch (err) {
+                showError("يجب السماح باستخدام الميكروفون للعب.");
+                joinBtn.disabled = false;
+                joinBtn.innerText = "دخول الغرفة";
+                return;
+            }
+
+            // تسجيل اللاعب في قاعدة البيانات
+            const newPlayerRef = push(playersRef);
+            myId = newPlayerRef.key;
+            
+            await set(newPlayerRef, {
+                id: myId,
+                name: myName,
+                joinedAt: Date.now()
+            });
+
+            // حذف اللاعب تلقائياً عند إغلاق المتصفح
+            onDisconnect(newPlayerRef).remove();
+
+            // الانتقال لشاشة الغرفة
+            loginScreen.style.display = "none";
+            roomScreen.style.display = "block";
+
+            setupRoomListeners();
+            setupWebRTCListeners();
+        });
+
+        // دالة كتم الصوت
+        muteBtn.addEventListener('click', () => {
+            if (localStream) {
+                isMuted = !isMuted;
+                localStream.getAudioTracks()[0].enabled = !isMuted;
+                muteBtn.innerText = isMuted ? "فتح الميكروفون 🔇" : "كتم الميكروفون 🎤";
+                muteBtn.style.backgroundColor = isMuted ? "#7f8fa6" : "var(--accent)";
+            }
+        });
+
+        // تحديث قائمة اللاعبين الحية
+        function setupRoomListeners() {
+            const playersRef = ref(db, 'rooms/baloot/players');
+            onValue(playersRef, (snapshot) => {
+                playersUl.innerHTML = "";
+                if (snapshot.exists()) {
+                    const players = snapshot.val();
+                    Object.values(players).forEach(player => {
+                        const li = document.createElement('li');
+                        li.className = 'player-item';
+                        li.innerHTML = `
+                            <span>${player.name} ${player.id === myId ? '(أنت)' : ''}</span>
+                            <span class="status">متصل 🟢</span>
+                        `;
+                        playersUl.appendChild(li);
+                    });
+                }
+            });
+        }
+
+        // إعداد شبكة الصوت WebRTC
+        function setupWebRTCListeners() {
+            // الاستماع للاعبين الجدد للاتصال بهم
+            const playersRef = ref(db, 'rooms/baloot/players');
+            onChildAdded(playersRef, (snapshot) => {
+                const remotePlayer = snapshot.val();
+                if (remotePlayer.id !== myId) {
+                    initiateCall(remotePlayer.id);
+                }
+            });
+
+            // الاستماع للإشارات (Signaling) القادمة لي
+            const signalsRef = ref(db, `rooms/baloot/signals/${myId}`);
+            onChildAdded(signalsRef, async (snapshot) => {
+                const data = snapshot.val();
+                const signalKey = snapshot.key;
+                const senderId = data.sender;
+
+                if (!peers[senderId]) {
+                    createPeerConnection(senderId);
+                }
+
+                const pc = peers[senderId];
+
+                if (data.type === 'offer') {
+                    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    sendSignal(senderId, { type: 'answer', answer: answer });
+                } else if (data.type === 'answer') {
+                    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                } else if (data.type === 'ice') {
+                    pc.addIceCandidate(new RTCIceCandidate(data.ice));
+                }
+
+                // حذف الإشارة بعد قراءتها لتنظيف قاعدة البيانات
+                remove(ref(db, `rooms/baloot/signals/${myId}/${signalKey}`));
+            });
+        }
+
+        // إنشاء اتصال بشخص محدد
+        function createPeerConnection(remoteId) {
+            const pc = new RTCPeerConnection(rtcConfig);
+            peers[remoteId] = pc;
+
+            // إضافة صوتي للاتصال
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+            // استقبال صوت الطرف الآخر
+            pc.ontrack = (event) => {
+                let audioElement = document.getElementById(`audio-${remoteId}`);
+                if (!audioElement) {
+                    audioElement = document.createElement('audio');
+                    audioElement.id = `audio-${remoteId}`;
+                    audioElement.autoplay = true;
+                    audioElements.appendChild(audioElement);
+                }
+                audioElement.srcObject = event.streams[0];
+            };
+
+            // إرسال مفاتيح الشبكة
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    sendSignal(remoteId, { type: 'ice', ice: event.candidate });
+                }
+            };
+
+            return pc;
+        }
+
+        // بدء المكالمة (إرسال عرض Offer)
+        async function initiateCall(remoteId) {
+            const pc = createPeerConnection(remoteId);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            sendSignal(remoteId, { type: 'offer', offer: offer });
+        }
+
+        // إرسال البيانات عبر Firebase
+        function sendSignal(targetId, payload) {
+            const signalRef = ref(db, `rooms/baloot/signals/${targetId}`);
+            payload.sender = myId;
+            push(signalRef, payload);
+        }
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            errorMsg.style.display = "block";
+            setTimeout(() => { errorMsg.style.display = "none"; }, 5000);
+        }
+    </script>
+</body>
+</html>
