@@ -276,9 +276,17 @@
                     audioElement = document.createElement('audio');
                     audioElement.id = `audio-${remoteId}`;
                     audioElement.autoplay = true;
+                    audioElement.playsInline = true; // مهم جداً لدعم الجوالات
                     audioElements.appendChild(audioElement);
                 }
                 audioElement.srcObject = event.streams[0];
+                
+                // إجبار المتصفح على تشغيل الصوت وتخطي الحظر
+                setTimeout(() => {
+                    audioElement.play().catch(error => {
+                        console.warn("تم منع تشغيل الصوت بواسطة المتصفح:", error);
+                    });
+                }, 500);
             };
 
             // إرسال مفاتيح الشبكة
