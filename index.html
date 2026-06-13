@@ -61,60 +61,96 @@
             display: none; 
             width: 100%;
             height: 100%;
-            padding: 10px; /* حواف أصغر للجوال */
+            padding: 10px; 
             box-sizing: border-box;
+            position: relative; /* ضروري لضبط مكان زر القائمة */
+        }
+
+        /* زر القائمة الجانبية (ثلاث شرطات) */
+        .menu-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+            font-size: 20px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* خلفية التعتيم عند فتح القائمة */
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 998;
         }
         
         .game-layout {
             display: flex;
-            flex-direction: column; /* ترتيب الغرفة فوق والطاولة تحت للجوال */
-            gap: 10px;
             height: 100%;
             max-width: 1400px;
             margin: 0 auto;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* اللوحة الجانبية (أصبحت لوحة علوية مصغرة في الجوال) */
+        /* اللوحة الجانبية (أصبحت قائمة منسدلة مخفية) */
         .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px; /* مخفية خارج الشاشة لليمين */
+            width: 260px;
+            height: 100vh;
             background-color: var(--panel-bg);
-            border-radius: 15px;
-            padding: 10px;
-            width: 100%;
-            max-height: 140px; /* حجم صغير جداً لترك مساحة للطاولة */
+            border-radius: 0;
+            padding: 20px;
+            padding-top: 70px; /* لترك مساحة للزر */
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 10;
+            transition: right 0.3s ease; /* حركة الانزلاق الناعمة */
+            z-index: 999;
         }
-        .sidebar h2 { font-size: 16px; margin-bottom: 5px; }
-        .sidebar button { padding: 8px; font-size: 14px; }
+        
+        /* كلاس يضاف برمجياً لفتح القائمة */
+        .sidebar.open {
+            right: 0; 
+        }
+        
+        .sidebar h2 { font-size: 18px; margin-bottom: 15px; text-align: center; }
+        .sidebar button { padding: 12px; font-size: 16px; margin-bottom: 10px; width: 100%; }
         
         .player-list {
             list-style: none;
             padding: 0;
             margin-top: 10px;
             display: flex;
-            flex-wrap: wrap; /* وضع اللاعبين بجانب بعض لتوفير المساحة */
-            gap: 5px;
+            flex-direction: column; /* إعادة الترتيب العمودي للقائمة */
+            gap: 10px;
             overflow-y: auto;
         }
         .player-item {
             background-color: var(--primary);
-            padding: 5px 10px;
+            padding: 12px;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
-            flex: 1 1 45%; /* كل لاعبين في سطر */
-            margin-bottom: 0;
+            font-size: 14px;
         }
-        .status { font-size: 10px; color: #4caf50; }
+        .status { font-size: 11px; color: #4caf50; }
 
-        /* منطقة الطاولة الخضراء (أخذت باقي مساحة الجوال) */
+        /* منطقة الطاولة الخضراء */
         .table-area {
-            flex-grow: 1;
+            width: 100%;
+            height: 100%;
             background-color: var(--table-green);
             border-radius: 40px; /* شكل مستطيل دائري يناسب شاشة الجوال */
             border: 6px solid #5d4037; /* حافة أنحف */
@@ -159,17 +195,10 @@
             font-size: 14px;
         }
 
-        /* --- دعم شاشات الكمبيوتر الكبيرة (اختياري لتبقى مرتبة لو فتحت بحاسب) --- */
+        /* (ملاحظة: يمكنك حذف كود @media الخاص بالكمبيوتر إن أردت، لأن هذا التصميم المنسدل ممتاز لكل الشاشات) */
         @media (min-width: 768px) {
             #room-screen { padding: 20px; }
-            .game-layout { flex-direction: row; }
-            .sidebar { width: 300px; max-height: 100%; padding: 20px; }
-            .sidebar h2 { font-size: 24px; margin-bottom: 20px; }
-            .sidebar button { padding: 12px; font-size: 16px; }
-            .player-list { display: block; }
-            .player-item { flex: none; font-size: 16px; padding: 15px; margin-bottom: 10px; }
-            .status { font-size: 12px; }
-            .table-area { border-radius: 150px; border-width: 10px; }
+            .table-area { border-radius: 150px; border-width: 10px; max-height: 800px; max-width: 1200px; }
             .seat { padding: 10px 20px; font-size: 16px; border-radius: 20px; }
             .seat.right { right: 20px; transform: translateY(-50%); }
             .seat.left { left: 20px; transform: translateY(-50%); }
@@ -192,12 +221,16 @@
 
     <!-- شاشة اللعب (التصميم الجديد) -->
     <div id="room-screen">
+        <!-- زر القائمة والخلفية -->
+        <button id="menu-toggle" class="menu-toggle">☰</button>
+        <div id="menu-overlay" class="menu-overlay"></div>
+
         <div class="game-layout">
             
-            <!-- اللوحة الجانبية (نفس المنطق السابق) -->
-            <div class="sidebar">
-                <h2 style="text-align: center; margin-top: 0;">الغرفة الصوتية 🎤</h2>
-                <button id="mute-btn" style="width: 100%;">كتم الميكروفون 🎤</button>
+            <!-- اللوحة الجانبية (أصبحت مخفية) -->
+            <div id="sidebar" class="sidebar">
+                <h2 style="margin-top: 0;">الغرفة الصوتية 🎤</h2>
+                <button id="mute-btn">كتم الميكروفون 🎤</button>
                 <ul id="players-ul" class="player-list"></ul>
             </div>
 
@@ -255,6 +288,22 @@
         const playersUl = document.getElementById('players-ul');
         const muteBtn = document.getElementById('mute-btn');
         const audioElements = document.getElementById('audio-elements');
+
+        // عناصر القائمة المنسدلة
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const sidebar = document.getElementById('sidebar');
+
+        // دوال فتح وإغلاق القائمة
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            menuOverlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        });
+
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            menuOverlay.style.display = 'none';
+        });
 
         joinBtn.addEventListener('click', async () => {
             myName = playerNameInput.value.trim();
