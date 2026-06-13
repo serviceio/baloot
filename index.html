@@ -70,7 +70,6 @@
             font-size: 12px;
             color: #4caf50;
         }
-        /* لإخفاء عناصر الصوت لأننا لا نحتاج لرؤيتها، فقط سماعها */
         #audio-elements { display: none; } 
     </style>
 </head>
@@ -88,8 +87,7 @@
         <h1>♠️ طاولة اللعب ♥️</h1>
         <p>أنت متصل الآن بالمحادثة الصوتية</p>
         <button id="mute-btn">كتم الميكروفون 🎤</button>
-        <ul id="players-ul" class="player-list">
-            </ul>
+        <ul id="players-ul" class="player-list"></ul>
     </div>
 
     <div id="audio-elements"></div>
@@ -98,7 +96,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, get, onValue, onDisconnect, push, child, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // مفاتيح مشروعك
         const firebaseConfig = {
             apiKey: "AIzaSyD3qG2s1puphlNnvCE2N8bznoHnF-cxeJw",
             authDomain: "balo-ot.firebaseapp.com",
@@ -113,18 +110,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // متغيرات اللعبة والصوت
         let myId = null;
         let myName = "";
         let localStream = null;
         let isMuted = false;
-        const peers = {}; // لحفظ اتصالات اللاعبين الآخرين
+        const peers = {}; 
         const maxPlayers = 8;
         
-        // سيرفرات جوجل المجانية لربط الصوت
         const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-        // عناصر الواجهة
         const loginScreen = document.getElementById('login-screen');
         const roomScreen = document.getElementById('room-screen');
         const playerNameInput = document.getElementById('player-name');
@@ -134,7 +128,6 @@
         const muteBtn = document.getElementById('mute-btn');
         const audioElements = document.getElementById('audio-elements');
 
-        // دالة الدخول للغرفة
         joinBtn.addEventListener('click', async () => {
             myName = playerNameInput.value.trim();
             if (!myName) {
@@ -160,7 +153,6 @@
                 return;
             }
 
-            // طلب إذن الميكروفون قبل الدخول الفعلي
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             } catch (err) {
@@ -170,7 +162,6 @@
                 return;
             }
 
-            // تسجيل اللاعب في قاعدة البيانات
             const newPlayerRef = push(playersRef);
             myId = newPlayerRef.key;
             
@@ -180,10 +171,10 @@
                 joinedAt: Date.now()
             });
 
-            // حذف اللاعب تلقائياً عند إغلاق المتصفح
             onDisconnect(newPlayerRef).remove();
+            // مسح أي إشارات سابقة معلقة عند قطع الاتصال
+            onDisconnect(ref(db, `rooms/baloot/signals/${myId}`)).remove();
 
-            // الانتقال لشاشة الغرفة
             loginScreen.style.display = "none";
             roomScreen.style.display = "block";
 
@@ -191,7 +182,6 @@
             setupWebRTCListeners();
         });
 
-        // دالة كتم الصوت
         muteBtn.addEventListener('click', () => {
             if (localStream) {
                 isMuted = !isMuted;
@@ -201,7 +191,6 @@
             }
         });
 
-        // تحديث قائمة اللاعبين الحية
         function setupRoomListeners() {
             const playersRef = ref(db, 'rooms/baloot/players');
             onValue(playersRef, (snapshot) => {
@@ -221,18 +210,16 @@
             });
         }
 
-        // إعداد شبكة الصوت WebRTC
         function setupWebRTCListeners() {
-            // الاستماع للاعبين الجدد للاتصال بهم
             const playersRef = ref(db, 'rooms/baloot/players');
             onChildAdded(playersRef, (snapshot) => {
                 const remotePlayer = snapshot.val();
-                if (remotePlayer.id !== myId) {
+                // منع التصادم: الجهاز الذي يملك ID أكبر هو فقط من يرسل طلب الاتصال الأول
+                if (remotePlayer.id !== myId && myId > remotePlayer.id) {
                     initiateCall(remotePlayer.id);
                 }
             });
 
-            // الاستماع للإشارات (Signaling) القادمة لي
             const signalsRef = ref(db, `rooms/baloot/signals/${myId}`);
             onChildAdded(signalsRef, async (snapshot) => {
                 const data = snapshot.val();
@@ -245,61 +232,68 @@
 
                 const pc = peers[senderId];
 
-                if (data.type === 'offer') {
-                    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    sendSignal(senderId, { type: 'answer', answer: answer });
-                } else if (data.type === 'answer') {
-                    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-                } else if (data.type === 'ice') {
-                    pc.addIceCandidate(new RTCIceCandidate(data.ice));
+                try {
+                    if (data.type === 'offer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        sendSignal(senderId, { type: 'answer', answer: answer });
+                    } else if (data.type === 'answer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    } else if (data.type === 'ice' && data.ice && data.ice.candidate) {
+                        // إضافة بيانات الشبكة فقط إذا كانت غير فارغة
+                        await pc.addIceCandidate(new RTCIceCandidate(data.ice));
+                    }
+                } catch (error) {
+                    console.warn("تم تجاهل خطأ في الاتصال:", error);
                 }
 
-                // حذف الإشارة بعد قراءتها لتنظيف قاعدة البيانات
+                // تنظيف قاعدة البيانات فوراً
                 remove(ref(db, `rooms/baloot/signals/${myId}/${signalKey}`));
             });
         }
 
-        // إنشاء اتصال بشخص محدد
         function createPeerConnection(remoteId) {
             const pc = new RTCPeerConnection(rtcConfig);
             peers[remoteId] = pc;
 
-            // إضافة صوتي للاتصال
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-            // استقبال صوت الطرف الآخر
             pc.ontrack = (event) => {
                 let audioElement = document.getElementById(`audio-${remoteId}`);
                 if (!audioElement) {
                     audioElement = document.createElement('audio');
                     audioElement.id = `audio-${remoteId}`;
                     audioElement.autoplay = true;
-                    audioElement.playsInline = true; // مهم جداً لدعم الجوالات
+                    audioElement.playsInline = true; // دعم الأجهزة المحمولة
                     audioElements.appendChild(audioElement);
                 }
                 audioElement.srcObject = event.streams[0];
                 
-                // إجبار المتصفح على تشغيل الصوت وتخطي الحظر
                 setTimeout(() => {
                     audioElement.play().catch(error => {
-                        console.warn("تم منع تشغيل الصوت بواسطة المتصفح:", error);
+                        console.warn("تأكد من عدم وجود كتم تلقائي للصوت:", error);
                     });
                 }, 500);
             };
 
-            // إرسال مفاتيح الشبكة
             pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    sendSignal(remoteId, { type: 'ice', ice: event.candidate });
+                // إرسال البيانات فقط إذا كانت صالحة وتجنب القيم الفارغة (null)
+                if (event.candidate && event.candidate.candidate) {
+                    sendSignal(remoteId, { 
+                        type: 'ice', 
+                        ice: {
+                            candidate: event.candidate.candidate,
+                            sdpMid: event.candidate.sdpMid,
+                            sdpMLineIndex: event.candidate.sdpMLineIndex
+                        }
+                    });
                 }
             };
 
             return pc;
         }
 
-        // بدء المكالمة (إرسال عرض Offer)
         async function initiateCall(remoteId) {
             const pc = createPeerConnection(remoteId);
             const offer = await pc.createOffer();
@@ -307,7 +301,6 @@
             sendSignal(remoteId, { type: 'offer', offer: offer });
         }
 
-        // إرسال البيانات عبر Firebase
         function sendSignal(targetId, payload) {
             const signalRef = ref(db, `rooms/baloot/signals/${targetId}`);
             payload.sender = myId;
