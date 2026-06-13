@@ -11,18 +11,21 @@
             --primary: #0f3460;
             --accent: #e94560;
             --text: #ffffff;
+            --table-green: #2e7d32;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text);
             margin: 0;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
-        .container {
+        
+        /* شاشة الدخول (لم تتغير) */
+        .login-container {
             background-color: var(--panel-bg);
             padding: 30px;
             border-radius: 15px;
@@ -51,11 +54,40 @@
             transition: background 0.3s;
         }
         button:hover { background-color: #d13d56; }
-        #room-screen { display: none; }
+        
+        /* --- التصميم الجديد لشاشة الغرفة --- */
+        #room-screen { 
+            display: none; 
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            height: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* اللوحة الجانبية (الصوت وقائمة اللاعبين) */
+        .sidebar {
+            background-color: var(--panel-bg);
+            border-radius: 15px;
+            padding: 20px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
         .player-list {
             list-style: none;
             padding: 0;
             margin-top: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
         }
         .player-item {
             background-color: var(--primary);
@@ -66,16 +98,55 @@
             justify-content: space-between;
             align-items: center;
         }
-        .status {
-            font-size: 12px;
-            color: #4caf50;
+        .status { font-size: 12px; color: #4caf50; }
+
+        /* منطقة الطاولة الخضراء */
+        .table-area {
+            flex-grow: 1;
+            background-color: var(--table-green);
+            border-radius: 150px; /* جعلها بيضاوية */
+            border: 10px solid #5d4037; /* حافة خشبية */
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        /* أماكن اللاعبين الأربعة على الطاولة */
+        .seat {
+            position: absolute;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            border: 2px dashed rgba(255,255,255,0.3);
+        }
+        .seat.bottom { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .seat.top { top: 20px; left: 50%; transform: translateX(-50%); }
+        .seat.right { right: 20px; top: 50%; transform: translateY(-50%); }
+        .seat.left { left: 20px; top: 50%; transform: translateY(-50%); }
+
+        /* منطقة رمي الورق في المنتصف */
+        .center-board {
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255,255,255,0.3);
+        }
+
         #audio-elements { display: none; } 
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="container">
+    <!-- شاشة الدخول -->
+    <div id="login-screen" class="login-container">
         <h1>🎮 غرفة البلوت</h1>
         <p>الحد الأقصى للغرفة: 8 لاعبين</p>
         <input type="text" id="player-name" placeholder="أدخل اسمك هنا...">
@@ -83,19 +154,40 @@
         <p id="error-msg" style="color: var(--accent); display: none; margin-top: 15px;"></p>
     </div>
 
-    <div id="room-screen" class="container">
-        <h1>♠️ طاولة اللعب ♥️</h1>
-        <p>أنت متصل الآن بالمحادثة الصوتية</p>
-        <button id="mute-btn">كتم الميكروفون 🎤</button>
-        <ul id="players-ul" class="player-list"></ul>
+    <!-- شاشة اللعب (التصميم الجديد) -->
+    <div id="room-screen">
+        <div class="game-layout">
+            
+            <!-- اللوحة الجانبية (نفس المنطق السابق) -->
+            <div class="sidebar">
+                <h2 style="text-align: center; margin-top: 0;">الغرفة الصوتية 🎤</h2>
+                <button id="mute-btn" style="width: 100%;">كتم الميكروفون 🎤</button>
+                <ul id="players-ul" class="player-list"></ul>
+            </div>
+
+            <!-- الطاولة -->
+            <div class="table-area">
+                <div class="seat top">اللاعب (مقابل)</div>
+                <div class="seat right">اللاعب (يمين)</div>
+                <div class="seat bottom">مقعدك (أنت)</div>
+                <div class="seat left">اللاعب (يسار)</div>
+                
+                <div class="center-board">
+                    ساحة اللعب
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <div id="audio-elements"></div>
 
+    <!-- --- بداية كود الجافاسكريبت (منطق الصوت وقاعدة البيانات لم يتغير) --- -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, get, onValue, onDisconnect, push, child, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+        // مفاتيح مشروعك (لا تقم بتغييرها)
         const firebaseConfig = {
             apiKey: "AIzaSyD3qG2s1puphlNnvCE2N8bznoHnF-cxeJw",
             authDomain: "balo-ot.firebaseapp.com",
@@ -172,9 +264,9 @@
             });
 
             onDisconnect(newPlayerRef).remove();
-            // مسح أي إشارات سابقة معلقة عند قطع الاتصال
             onDisconnect(ref(db, `rooms/baloot/signals/${myId}`)).remove();
 
+            // إظهار الشاشة الجديدة (التصميم العريض)
             loginScreen.style.display = "none";
             roomScreen.style.display = "block";
 
@@ -214,7 +306,6 @@
             const playersRef = ref(db, 'rooms/baloot/players');
             onChildAdded(playersRef, (snapshot) => {
                 const remotePlayer = snapshot.val();
-                // منع التصادم: الجهاز الذي يملك ID أكبر هو فقط من يرسل طلب الاتصال الأول
                 if (remotePlayer.id !== myId && myId > remotePlayer.id) {
                     initiateCall(remotePlayer.id);
                 }
@@ -241,14 +332,12 @@
                     } else if (data.type === 'answer') {
                         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
                     } else if (data.type === 'ice' && data.ice && data.ice.candidate) {
-                        // إضافة بيانات الشبكة فقط إذا كانت غير فارغة
                         await pc.addIceCandidate(new RTCIceCandidate(data.ice));
                     }
                 } catch (error) {
                     console.warn("تم تجاهل خطأ في الاتصال:", error);
                 }
 
-                // تنظيف قاعدة البيانات فوراً
                 remove(ref(db, `rooms/baloot/signals/${myId}/${signalKey}`));
             });
         }
@@ -265,7 +354,7 @@
                     audioElement = document.createElement('audio');
                     audioElement.id = `audio-${remoteId}`;
                     audioElement.autoplay = true;
-                    audioElement.playsInline = true; // دعم الأجهزة المحمولة
+                    audioElement.playsInline = true; 
                     audioElements.appendChild(audioElement);
                 }
                 audioElement.srcObject = event.streams[0];
@@ -278,7 +367,6 @@
             };
 
             pc.onicecandidate = (event) => {
-                // إرسال البيانات فقط إذا كانت صالحة وتجنب القيم الفارغة (null)
                 if (event.candidate && event.candidate.candidate) {
                     sendSignal(remoteId, { 
                         type: 'ice', 
