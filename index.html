@@ -3,371 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة بلوت - الغرفة الصوتية</title>
+    <title>لعبة بلوت - الواقعية</title>
     <style>
+        /* ==========================================
+           1. التصميم الأساسي والمتغيرات (CSS)
+           ========================================== */
         :root {
-            --bg-color: #1a1a2e;
-            --panel-bg: #16213e;
-            --primary: #0f3460;
-            --accent: #e94560;
-            --text: #ffffff;
-            --table-green: #2e7d32;
+            --bg-color: #1a1a2e; --panel-bg: #16213e;
+            --primary: #0f3460; --accent: #e94560;
+            --text: #ffffff; --table-green: #2e7d32;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            height: 100vh;
-            height: 100dvh; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; 
+            background-color: var(--bg-color); color: var(--text);
+            margin: 0; height: 100dvh; display: flex;
+            justify-content: center; align-items: center; overflow: hidden; 
         }
+        button { cursor: pointer; transition: background 0.3s; font-family: inherit; }
         
+        /* شاشة الدخول */
         .login-container {
-            background-color: var(--panel-bg);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
+            background-color: var(--panel-bg); padding: 30px;
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%; max-width: 500px; text-align: center; z-index: 1000;
         }
-        h1 { color: var(--accent); margin-bottom: 20px; }
-        input {
-            width: 80%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover { background-color: #d13d56; }
+        .login-container input { width: 80%; padding: 12px; margin-bottom: 20px; border: none; border-radius: 8px; font-size: 16px; }
+        .login-container button { background-color: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 16px; }
+
+        /* شاشة الغرفة والطاولة */
+        #room-screen { display: none; width: 100%; height: 100%; padding: 60px 10px 10px 10px; box-sizing: border-box; position: relative; }
         
-        #room-screen { 
-            display: none; 
-            width: 100%;
-            height: 100%;
-            padding: 70px 10px 20px 10px; 
-            box-sizing: border-box;
-            position: relative; 
+        /* لوحة النتائج (العداد) */
+        .scoreboard {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; background: rgba(0,0,0,0.7);
+            padding: 10px 30px; border-radius: 20px; border: 2px solid #f1c40f;
+            z-index: 100; font-size: 18px; font-weight: bold; color: #f1c40f;
         }
+        .score-box { text-align: center; }
+        .score-title { font-size: 12px; color: #ccc; }
 
-        #game-msg {
-            display: none;
-            position: absolute;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            padding: 10px 20px;
-            border-radius: 20px;
-            color: #f1c40f;
-            z-index: 100;
-            font-weight: bold;
-            font-size: 14px;
-            text-align: center;
-            border: 1px solid #f1c40f;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            white-space: nowrap;
-        }
-
-        /* مؤشر الدور والموزع */
-        .turn-indicator {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 12px;
-            color: #fff;
-            z-index: 50;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .menu-toggle {
-            position: absolute;
-            top: max(15px, env(safe-area-inset-top)); 
-            right: max(15px, env(safe-area-inset-right));
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.2);
-            font-size: 20px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 998;
-        }
-        
-        .game-layout {
-            display: flex;
-            height: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: -300px; 
-            width: 260px;
-            height: 100vh;
-            background-color: var(--panel-bg);
-            border-radius: 0;
-            padding: 20px;
-            padding-top: 70px; 
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            transition: right 0.3s ease; 
-            z-index: 999;
-        }
-        
+        /* اللوحة الجانبية (الصوت) */
+        .menu-toggle { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: 1px solid #fff; padding: 5px 10px; border-radius: 5px; z-index: 1000; }
+        .sidebar { position: fixed; top: 0; right: -300px; width: 260px; height: 100vh; background: var(--panel-bg); padding: 60px 20px 20px; transition: right 0.3s; z-index: 999; }
         .sidebar.open { right: 0; }
-        .sidebar h2 { font-size: 18px; margin-bottom: 15px; text-align: center; }
-        .sidebar button { padding: 12px; font-size: 16px; margin-bottom: 10px; width: 100%; }
-        
-        .player-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-y: auto;
-        }
-        .player-item {
-            background-color: var(--primary);
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-        .status { font-size: 11px; color: #4caf50; }
+        .player-item { background: var(--primary); padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 14px; }
 
+        /* الطاولة */
         .table-area {
-            width: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1 / 1; 
-            margin: auto; 
-            background-color: var(--table-green);
-            border-radius: 30px; 
-            border: 6px solid #5d4037; 
-            position: relative;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 5px 15px rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            width: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1;
+            margin: auto; background-color: var(--table-green);
+            border-radius: 30px; border: 6px solid #5d4037; position: relative;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.6); display: flex;
+            justify-content: center; align-items: center; overflow: hidden;
         }
 
+        /* المقاعد (أزرار الجلوس) */
         .seat {
-            position: absolute;
-            background-color: rgba(0,0,0,0.6);
-            padding: 6px 12px;
-            border-radius: 12px;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            border: 1px dashed rgba(255,255,255,0.3);
-            white-space: nowrap; 
-            letter-spacing: 0.5px;
-            z-index: 5;
-            transition: border-color 0.3s;
+            position: absolute; background-color: rgba(0,0,0,0.8);
+            padding: 8px 15px; border-radius: 12px; color: white; font-size: 12px;
+            border: 1px dashed rgba(255,255,255,0.5); z-index: 5; cursor: pointer; text-align: center;
         }
-        /* إبراز من عليه الدور */
-        .seat.active-turn { border: 2px solid #f1c40f; background-color: rgba(241, 196, 15, 0.2); }
-        .seat.dealer { border: 2px solid #e74c3c; } /* الموزع بالأحمر */
-
+        .seat.taken { background-color: var(--primary); border: 1px solid #4caf50; cursor: default; }
+        .seat.active-turn { border: 2px solid #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+        
         .seat.bottom { bottom: 15px; left: 50%; transform: translateX(-50%); }
         .seat.top { top: 15px; left: 50%; transform: translateX(-50%); }
         .seat.right { right: -15px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
         .seat.left { left: -15px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 
-        .center-board {
-            width: 180px; 
-            height: 180px;
-            border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 10px;
-            color: rgba(255,255,255,0.4);
-            font-size: 14px;
-            z-index: 10;
-        }
-        
-        #deal-btn {
-            background-color: #f39c12;
-            padding: 8px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            display: none; 
-        }
-        #deal-btn:hover { background-color: #e67e22; }
+        .center-board { width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; flex-direction: column; position: relative; z-index: 10; }
 
-        .buy-card-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .bidding-controls {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 160px;
-        }
-        
-        .bid-btn {
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            flex: 1 1 40%; 
-        }
-        .btn-sun { background-color: #f1c40f; color: black; }
-        .btn-hokm { background-color: #e74c3c; }
-        .btn-pass { background-color: #7f8c8d; }
-        .btn-ashkal { background-color: #2980b9; }
-        .btn-qablak { background-color: #9b59b6; }
-        
-        .suit-btn { font-size: 18px; padding: 5px; margin: 2px; flex: 1; }
-        .suit-btn.red { color: #e74c3c; }
-        .suit-btn.black { color: black; }
-
-        .my-hand {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: -15px; 
-            z-index: 20;
-        }
-        
-        .card {
-            width: 35px;
-            height: 55px;
-            background-color: white;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: black;
-            box-shadow: -2px 2px 5px rgba(0,0,0,0.4);
-            border: 1px solid #ccc;
-            margin-left: -10px; 
-        }
-        .card.center-card {
-            transform: scale(1.2); 
-            margin-left: 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-        }
-        .card:first-child { margin-left: 0; }
+        /* الأوراق */
+        .my-hand { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: -15px; z-index: 20; }
+        .card { width: 45px; height: 65px; background: white; border-radius: 5px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; color: black; box-shadow: -2px 2px 5px rgba(0,0,0,0.5); border: 1px solid #ccc; transition: transform 0.2s; cursor: pointer; }
         .card.red { color: #e74c3c; }
+        .card:hover { transform: translateY(-15px); }
+        .card.played { position: absolute; transform: scale(1.1); margin: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
 
-        @media (min-width: 768px) {
-            #room-screen { padding: 20px; }
-            .table-area { border-radius: 150px; border-width: 10px; max-height: 800px; max-width: 1200px; }
-            .seat { padding: 10px 20px; font-size: 16px; border-radius: 20px; }
-            .seat.right { right: 20px; transform: translateY(-50%); }
-            .seat.left { left: 20px; transform: translateY(-50%); }
-            .center-board { width: 200px; height: 200px; font-size: 18px; }
-            .card { width: 50px; height: 75px; font-size: 18px; margin-left: -15px; }
-            .my-hand { bottom: 70px; }
-            .bidding-controls { width: 200px; gap: 10px; }
-            .bid-btn { padding: 8px 15px; font-size: 14px; }
+        /* أماكن رمي الأوراق في المنتصف */
+        .played-card-bottom { top: 60%; left: 50%; transform: translate(-50%, -50%); }
+        .played-card-top { top: 40%; left: 50%; transform: translate(-50%, -50%); }
+        .played-card-right { top: 50%; left: 60%; transform: translate(-50%, -50%); }
+        .played-card-left { top: 50%; left: 40%; transform: translate(-50%, -50%); }
+
+        /* المزاد والمشاريع */
+        .bidding-controls, .projects-controls { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; width: 180px; }
+        .projects-controls { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); z-index: 25; display: none; }
+        .btn-game { padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; color: white; background: var(--primary); }
+        .btn-sun { background: #f1c40f; color: black; } .btn-hokm { background: #e74c3c; }
+
+        /* لوحة الهوست (المضيف) */
+        .host-panel {
+            position: absolute; top: 80px; left: 10px; background: rgba(0,0,0,0.8);
+            padding: 10px; border-radius: 10px; border: 1px solid var(--accent); z-index: 100;
+            display: none; flex-direction: column; gap: 5px; width: 150px;
         }
+        .host-panel input { width: 100%; padding: 5px; box-sizing: border-box; text-align: center; }
+        .host-panel button { padding: 5px; background: var(--accent); color: white; border: none; border-radius: 5px; font-size: 12px; }
 
-        #audio-elements { display: none; } 
+        /* شاشة القيد / نهاية الجولة */
+        #qayd-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+        }
+        .qayd-content { max-width: 600px; margin: auto; background: var(--panel-bg); padding: 20px; border-radius: 15px; border: 2px solid var(--accent); }
+        .trick-row { display: flex; justify-content: space-around; background: rgba(255,255,255,0.1); padding: 10px; margin-bottom: 10px; border-radius: 10px; align-items: center; }
+        .trick-card-wrap { text-align: center; font-size: 10px; color: #ccc; }
+        .trick-card-wrap .card { position: relative; margin: 5px auto; width: 30px; height: 45px; font-size: 12px; }
+        .close-qayd { display: block; width: 100%; background: var(--accent); color: white; padding: 10px; text-align: center; border: none; border-radius: 5px; font-size: 16px; margin-top: 20px; }
+
+        /* رسائل عائمة */
+        #toast-msg { display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: #f1c40f; color: black; padding: 5px 15px; border-radius: 10px; font-weight: bold; z-index: 200; pointer-events: none; }
+        #audio-elements { display: none; }
     </style>
 </head>
 <body>
 
+    <!-- 2. واجهة الدخول -->
     <div id="login-screen" class="login-container">
-        <h1>🎮 غرفة البلوت</h1>
-        <p>الحد الأقصى للغرفة: 8 لاعبين</p>
-        <input type="text" id="player-name" placeholder="أدخل اسمك هنا...">
-        <button id="join-btn">دخول الغرفة</button>
+        <h1>🎮 طاولة البلوت الواقعية</h1>
+        <input type="text" id="player-name" placeholder="أدخل اسمك...">
+        <button id="join-btn">دخول</button>
         <p id="error-msg" style="color: var(--accent); display: none; margin-top: 15px;"></p>
     </div>
 
+    <!-- 3. شاشة اللعب -->
     <div id="room-screen">
-        <div id="turn-indicator" class="turn-indicator" style="display: none;">بانتظار بدء اللعبة...</div>
-        <div id="game-msg"></div>
+        <!-- لوحة النتائج -->
+        <div class="scoreboard">
+            <div class="score-box"><div class="score-title">لنا</div><div id="score-us">0</div></div>
+            <div class="score-box"><div class="score-title">لهم</div><div id="score-them">0</div></div>
+        </div>
 
-        <button id="menu-toggle" class="menu-toggle">☰</button>
-        <div id="menu-overlay" class="menu-overlay"></div>
+        <div id="toast-msg"></div>
 
-        <div class="game-layout">
-            <div id="sidebar" class="sidebar">
-                <h2 style="margin-top: 0;">الغرفة الصوتية 🎤</h2>
-                <button id="mute-btn">كتم الميكروفون 🎤</button>
-                <ul id="players-ul" class="player-list"></ul>
+        <!-- لوحة الهوست -->
+        <div id="host-panel" class="host-panel">
+            <div style="font-size:12px; color:#f1c40f; text-align:center; margin-bottom:5px;">لوحة المضيف 👑</div>
+            <button id="host-deal-btn" style="background:#4caf50;">توزيع جديد</button>
+            <button id="host-qayd-btn">شاشة القيد / الورق</button>
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <input type="number" id="host-add-us" placeholder="نقط لنا">
+                <input type="number" id="host-add-them" placeholder="نقط لهم">
+            </div>
+            <button id="host-submit-score-btn">تسجيل النقاط</button>
+        </div>
+
+        <!-- القائمة الجانبية للصوت -->
+        <button id="menu-toggle" class="menu-toggle">☰ الصوت واللاعبين</button>
+        <div id="sidebar" class="sidebar">
+            <button id="mute-btn" class="btn-game" style="width:100%; margin-bottom:10px;">كتم الميكروفون 🎤</button>
+            <div id="players-ul"></div>
+        </div>
+
+        <!-- الطاولة -->
+        <div class="table-area">
+            <!-- المقاعد (للنقر والجلوس) -->
+            <div id="seat-top" class="seat top" onclick="takeSeat('top')">اجلس هنا</div>
+            <div id="seat-right" class="seat right" onclick="takeSeat('right')">اجلس هنا</div>
+            <div id="seat-bottom" class="seat bottom" onclick="takeSeat('bottom')">اجلس هنا</div>
+            <div id="seat-left" class="seat left" onclick="takeSeat('left')">اجلس هنا</div>
+            
+            <div class="center-board" id="center-board">
+                <!-- هنا تظهر ورقة المشترى وأزرار المزاد والأوراق الملعوبة -->
+            </div>
+            
+            <!-- أزرار المشاريع -->
+            <div id="projects-controls" class="projects-controls">
+                <button class="btn-game" onclick="announceProject('سرا')">سرا</button>
+                <button class="btn-game" onclick="announceProject('خمسين')">خمسين</button>
+                <button class="btn-game" onclick="announceProject('مية')">مية</button>
+                <button class="btn-game" onclick="announceProject('أربعمية')">400</button>
+                <button class="btn-game" onclick="announceProject('بلوت')">بلوت</button>
             </div>
 
-            <div class="table-area">
-                <div id="seat-top" class="seat top">اللاعب (مقابل)</div>
-                <div id="seat-right" class="seat right">اللاعب (يمين)</div>
-                <div id="seat-bottom" class="seat bottom">مقعدك (أنت)</div>
-                <div id="seat-left" class="seat left">اللاعب (يسار)</div>
-                
-                <div class="center-board" id="center-board">
-                    ساحة اللعب
-                    <button id="deal-btn">توزيع الأوراق</button>
-                </div>
-                
-                <div id="my-hand" class="my-hand"></div>
-            </div>
+            <!-- ورق اليد -->
+            <div id="my-hand" class="my-hand"></div>
+        </div>
+    </div>
+
+    <!-- شاشة القيد و اللعبات -->
+    <div id="qayd-modal">
+        <div class="qayd-content">
+            <h2 style="color:var(--accent); text-align:center; margin-top:0;">شاشة القيد وكشف الورق</h2>
+            <div id="qayd-tricks-container"></div>
+            <button class="close-qayd" onclick="document.getElementById('qayd-modal').style.display='none'">إغلاق</button>
         </div>
     </div>
 
     <div id="audio-elements"></div>
 
+    <!-- ==========================================
+         4. منطق اللعبة (JavaScript)
+         ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, get, onValue, onDisconnect, push, child, remove, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, onDisconnect, push, remove, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD3qG2s1puphlNnvCE2N8bznoHnF-cxeJw",
@@ -383,439 +215,465 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // متغيرات اللاعب
         let myId = null;
         let myName = "";
+        let mySeat = null; // bottom, top, right, left
+        let isHost = false;
+        
+        // متغيرات اللعبة
+        let gameState = null;
+        let roomPlayers = {};
         let localStream = null;
         let isMuted = false;
-        let gameState = null;
-        let myPlayerIndex = -1;
         const peers = {}; 
-        const maxPlayers = 8;
-        
         const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-        const loginScreen = document.getElementById('login-screen');
-        const roomScreen = document.getElementById('room-screen');
-        const playerNameInput = document.getElementById('player-name');
-        const joinBtn = document.getElementById('join-btn');
-        const errorMsg = document.getElementById('error-msg');
-        const playersUl = document.getElementById('players-ul');
-        const muteBtn = document.getElementById('mute-btn');
-        const audioElements = document.getElementById('audio-elements');
-        const dealBtn = document.getElementById('deal-btn');
-        const myHandDiv = document.getElementById('my-hand');
-        const gameMsgDiv = document.getElementById('game-msg');
-        const turnIndicator = document.getElementById('turn-indicator');
-        const centerBoard = document.getElementById('center-board');
+        // --- دوال الدخول ---
+        document.getElementById('join-btn').addEventListener('click', async () => {
+            myName = document.getElementById('player-name').value.trim();
+            if (!myName) return;
 
-        const menuToggle = document.getElementById('menu-toggle');
-        const menuOverlay = document.getElementById('menu-overlay');
-        const sidebar = document.getElementById('sidebar');
+            document.getElementById('join-btn').disabled = true;
 
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            menuOverlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
-        });
+            try { localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); } 
+            catch (err) { alert("يجب السماح بالمايك!"); return; }
 
-        menuOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            menuOverlay.style.display = 'none';
-        });
-
-        joinBtn.addEventListener('click', async () => {
-            myName = playerNameInput.value.trim();
-            if (!myName) {
-                showError("الرجاء إدخال اسمك!"); return;
-            }
-
-            joinBtn.disabled = true; joinBtn.innerText = "جاري التحقق...";
             const playersRef = ref(db, 'rooms/baloot/players');
-            const snapshot = await get(playersRef);
-            
-            if (snapshot.exists() && Object.keys(snapshot.val()).length >= maxPlayers) {
-                showError("عذراً، الغرفة ممتلئة حالياً (8/8).");
-                joinBtn.disabled = false; joinBtn.innerText = "دخول الغرفة"; return;
-            }
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-            } catch (err) {
-                showError("يجب السماح باستخدام الميكروفون للعب.");
-                joinBtn.disabled = false; joinBtn.innerText = "دخول الغرفة"; return;
-            }
-
             const newPlayerRef = push(playersRef);
             myId = newPlayerRef.key;
             
             await set(newPlayerRef, { id: myId, name: myName, joinedAt: Date.now() });
-
             onDisconnect(newPlayerRef).remove();
             onDisconnect(ref(db, `rooms/baloot/signals/${myId}`)).remove();
 
-            loginScreen.style.display = "none";
-            roomScreen.style.display = "block";
-            turnIndicator.style.display = "block";
+            // تحقق إذا كنت أول شخص لتصبح الهوست
+            const snap = await get(playersRef);
+            if (snap.exists()) {
+                const pKeys = Object.keys(snap.val());
+                if (pKeys.length === 1 || pKeys[0] === myId) {
+                    isHost = true;
+                    document.getElementById('host-panel').style.display = 'flex';
+                    // تصفير اللعبة عند دخول الهوست لأول مرة
+                    await update(ref(db, 'rooms/baloot'), { gameState: { scores: { us: 0, them: 0 } }, seats: null });
+                }
+            }
+
+            document.getElementById('login-screen').style.display = "none";
+            document.getElementById('room-screen').style.display = "block";
 
             setupRoomListeners();
+            setupGameListeners();
             setupWebRTCListeners();
-            setupGameListeners(); 
         });
 
-        // ==========================================
-        // محرك البلوت (البلوت انجن) والتوزيع
-        // ==========================================
-        dealBtn.addEventListener('click', async () => {
-            const playersSnapshot = await get(ref(db, 'rooms/baloot/players'));
-            if (!playersSnapshot.exists()) return;
-            
-            const players = playersSnapshot.val();
-            // أخذ أول 4 لاعبين كلاعبين أساسيين (حسب وقت الانضمام)
-            const activePlayers = Object.values(players)
-                .sort((a,b) => a.joinedAt - b.joinedAt)
-                .slice(0, 4)
-                .map(p => p.id);
-            
-            if (activePlayers.length < 4) {
-                showGameMessage("نحتاج 4 لاعبين على الأقل لبدء البلوت!");
-                return;
+        // --- نظام الجلوس الحر ---
+        window.takeSeat = async function(seatId) {
+            if (mySeat) return; // جالس مسبقاً
+            const seatRef = ref(db, `rooms/baloot/seats/${seatId}`);
+            const snap = await get(seatRef);
+            if (!snap.exists()) {
+                await set(seatRef, { id: myId, name: myName });
+                mySeat = seatId;
+            } else {
+                toast("المقعد محجوز!");
             }
+        };
 
-            // تحديد الموزع الجديد (تدوير عكس عقارب الساعة)
-            const oldStateSnapshot = await get(ref(db, 'rooms/baloot/gameState'));
-            let nextDealer = 0;
-            if (oldStateSnapshot.exists() && oldStateSnapshot.val().dealerIndex !== undefined) {
-                nextDealer = (oldStateSnapshot.val().dealerIndex + 1) % 4; // موزع جديد
+        function updateSeatsUI(seats) {
+            const allSeats = ['bottom', 'top', 'right', 'left'];
+            allSeats.forEach(s => {
+                const el = document.getElementById('seat-' + s);
+                if (seats && seats[s]) {
+                    el.innerText = seats[s].name + (seats[s].id === myId ? " (أنت)" : "");
+                    el.classList.add('taken');
+                    
+                    // تحديد من عليه الدور بلون مختلف
+                    if (gameState && gameState.turnSeat === s && gameState.phase !== 'scoring') {
+                        el.classList.add('active-turn');
+                    } else {
+                        el.classList.remove('active-turn');
+                    }
+                } else {
+                    el.innerText = "اجلس هنا";
+                    el.classList.remove('taken', 'active-turn');
+                }
+            });
+        }
+
+        // --- دوال الهوست (التوزيع وتسجيل النقاط) ---
+        document.getElementById('host-deal-btn').addEventListener('click', async () => {
+            const seatsSnap = await get(ref(db, 'rooms/baloot/seats'));
+            if (!seatsSnap.exists() || Object.keys(seatsSnap.val()).length < 4) {
+                toast("يجب أن يمتلئ الطاولة (4 لاعبين) أولاً!"); return;
             }
-
-            // اللعب يبدأ من يمين الموزع (+1 عكس عقارب الساعة)
-            const firstTurn = (nextDealer + 1) % 4;
-
+            
             let deck = [];
             const suits = ['♠', '♥', '♦', '♣'];
             const values = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-            for (let suit of suits) { for (let value of values) deck.push({ suit, value }); }
-            
+            for (let suit of suits) for (let value of values) deck.push({ suit, value });
             for (let i = deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
             }
 
             const hands = {};
-            activePlayers.forEach(id => { hands[id] = deck.splice(0, 5); });
+            const seatsData = seatsSnap.val();
+            // توزيع 5 أوراق لكل مقعد
+            ['bottom', 'top', 'right', 'left'].forEach(s => {
+                hands[seatsData[s].id] = deck.splice(0, 5);
+            });
             const buyCard = deck.shift();
 
-            await set(ref(db, 'rooms/baloot/gameState'), {
-                activePlayers: activePlayers,
-                dealerIndex: nextDealer,
-                turnIndex: firstTurn,
-                round: 1, // اللفة الأولى
-                phase: 'bidding', // مرحلة الشراء
-                passes: 0,
-                buyCard: buyCard,
-                hands: hands,
-                deckRest: deck,
-                currentBid: null,
-                contestAnswers: {}
+            // الدورة تبدأ عشوائياً أو حسب قوانينك (لنبسطها: يبدأ اليمين دائماً كأول جولة)
+            const turnSeat = 'right'; 
+
+            await update(ref(db, 'rooms/baloot/gameState'), {
+                phase: 'bidding', round: 1, passes: 0,
+                buyCard: buyCard, hands: hands, deckRest: deck,
+                turnSeat: turnSeat, currentTrick: [], pastTricks: []
             });
         });
 
-        // ==========================================
-        // الاستماع لحالة اللعبة والمزاد
-        // ==========================================
+        document.getElementById('host-submit-score-btn').addEventListener('click', async () => {
+            const addUs = parseInt(document.getElementById('host-add-us').value) || 0;
+            const addThem = parseInt(document.getElementById('host-add-them').value) || 0;
+            
+            const snap = await get(ref(db, 'rooms/baloot/gameState/scores'));
+            let currentUs = 0, currentThem = 0;
+            if (snap.exists()) {
+                currentUs = snap.val().us || 0;
+                currentThem = snap.val().them || 0;
+            }
+
+            const newUs = currentUs + addUs;
+            const newThem = currentThem + addThem;
+
+            await update(ref(db, 'rooms/baloot/gameState/scores'), { us: newUs, them: newThem });
+            
+            document.getElementById('host-add-us').value = '';
+            document.getElementById('host-add-them').value = '';
+
+            if (newUs >= 152 || newThem >= 152) {
+                toast("🎉 انتهت اللعبة! الفوز من 152 🎉", 6000);
+            } else {
+                toast("تم تسجيل النقاط بنجاح");
+            }
+        });
+
+        document.getElementById('host-qayd-btn').addEventListener('click', () => {
+            renderQaydModal();
+            document.getElementById('qayd-modal').style.display = 'block';
+        });
+
+        // --- الاستماع لحالة اللعبة ---
         function setupGameListeners() {
-            const gameStateRef = ref(db, 'rooms/baloot/gameState');
-            onValue(gameStateRef, (snapshot) => {
-                if (!snapshot.exists()) {
-                    dealBtn.style.display = 'block';
-                    return;
-                }
-                gameState = snapshot.val();
-                myPlayerIndex = gameState.activePlayers ? gameState.activePlayers.indexOf(myId) : -1;
-                
-                // تحديث الأوراق
-                if (gameState.hands && gameState.hands[myId]) renderMyHand(gameState.hands[myId]);
-                
-                updateSeatsUI();
-                processGameState();
+            onValue(ref(db, 'rooms/baloot/seats'), snap => {
+                updateSeatsUI(snap.val());
             });
-        }
 
-        // تحديث معلومات الجالسين وتحديد الموزع
-        function updateSeatsUI() {
-            if (!gameState.activePlayers || myPlayerIndex === -1) return;
-            // ترتيب المقاعد: أسفل(أنت)، يمين(+1)، أعلى(+2)، يسار(+3) عكس عقارب الساعة
-            const positions = [
-                { id: 'seat-bottom', offset: 0 },
-                { id: 'seat-right', offset: 1 },
-                { id: 'seat-top', offset: 2 },
-                { id: 'seat-left', offset: 3 }
-            ];
+            onValue(ref(db, 'rooms/baloot/gameState'), snap => {
+                if (!snap.exists()) return;
+                gameState = snap.val();
 
-            positions.forEach(pos => {
-                const targetIndex = (myPlayerIndex + pos.offset) % 4;
-                const targetPlayerId = gameState.activePlayers[targetIndex];
-                const el = document.getElementById(pos.id);
-                
-                // جلب اسم اللاعب
-                get(ref(db, `rooms/baloot/players/${targetPlayerId}`)).then(snap => {
-                    let name = snap.exists() ? snap.val().name : 'لاعب';
-                    if (pos.offset === 0) name += " (أنت)";
-                    el.innerText = name;
-                });
-
-                // تلوين من عليه الدور
-                if (gameState.turnIndex === targetIndex && gameState.phase === 'bidding') {
-                    el.classList.add('active-turn');
-                } else {
-                    el.classList.remove('active-turn');
-                }
-                
-                // تلوين الموزع
-                if (gameState.dealerIndex === targetIndex) {
-                    el.classList.add('dealer');
-                } else {
-                    el.classList.remove('dealer');
-                }
-            });
-        }
-
-        // معالجة حالة اللعبة والمزاد
-        function processGameState() {
-            dealBtn.style.display = 'none';
-            centerBoard.innerHTML = 'ساحة اللعب';
-
-            if (!gameState.activePlayers || myPlayerIndex === -1) return; // متفرج
-            
-            const isMyTurn = gameState.turnIndex === myPlayerIndex;
-            const isDealer = gameState.dealerIndex === myPlayerIndex;
-
-            // إظهار من عليه الدور في الأعلى
-            if (gameState.phase === 'bidding') {
-                if (isMyTurn) {
-                    turnIndicator.innerText = `دورك الآن (اللفة ${gameState.round})`;
-                    turnIndicator.style.backgroundColor = 'rgba(231, 76, 60, 0.8)';
-                } else {
-                    turnIndicator.innerText = `بانتظار قرار اللاعب... (اللفة ${gameState.round})`;
-                    turnIndicator.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                }
-            }
-
-            // عرض ورقة المشترى
-            if (gameState.buyCard && gameState.phase !== 'playing') {
-                const isRed = gameState.buyCard.suit === '♥' || gameState.buyCard.suit === '♦';
-                let html = `
-                    <div class="buy-card-container">
-                        <div class="card center-card ${isRed ? 'red' : ''}">
-                            <span>${gameState.buyCard.value}</span><span>${gameState.buyCard.suit}</span>
-                        </div>
-                        <div id="bidding-controls" class="bidding-controls"></div>
-                    </div>`;
-                centerBoard.innerHTML = html;
-            }
-
-            const controlsDiv = document.getElementById('bidding-controls');
-            if (!controlsDiv) return;
-
-            // --- 1. مرحلة المزاد العادية ---
-            if (gameState.phase === 'bidding' && isMyTurn) {
-                if (gameState.round === 1) {
-                    controlsDiv.innerHTML = `
-                        <button class="bid-btn btn-sun" onclick="submitBid('صن')">صن</button>
-                        <button class="bid-btn btn-hokm" onclick="submitBid('حكم', '${gameState.buyCard.suit}')">حكم</button>
-                        <button class="bid-btn btn-ashkal" onclick="submitBid('صن')">أشكل</button>
-                        <button class="bid-btn btn-pass" onclick="submitBid('بس')">بس</button>
-                    `;
-                } else if (gameState.round === 2) {
-                    controlsDiv.innerHTML = `
-                        <button class="bid-btn btn-sun" onclick="submitBid('صن')">صن</button>
-                        <button class="bid-btn btn-hokm" onclick="showHokmThaniMenu()">حكم ثاني</button>
-                        <button class="bid-btn btn-pass" onclick="submitBid('بس')">بس</button>
-                    `;
-                }
-            } 
-            // --- 2. مرحلة المعارضة (صن يطير الحكم، أو قبلك) ---
-            else if (gameState.phase === 'contesting' && gameState.currentBid) {
-                const bidderIndex = gameState.activePlayers.indexOf(gameState.currentBid.playerId);
-                const hasAnswered = gameState.contestAnswers && gameState.contestAnswers[myId];
-
-                if (myPlayerIndex !== bidderIndex && !hasAnswered) {
-                    turnIndicator.innerText = `اللاعب اختار ${gameState.currentBid.decision}، هل توافق؟`;
-                    
-                    if (gameState.currentBid.decision === 'حكم') {
-                        // أي شخص يمكنه شراء صن ليطير الحكم
-                        controlsDiv.innerHTML = `
-                            <button class="bid-btn btn-sun" onclick="submitContest('صن')">صن (يطير)</button>
-                            <button class="bid-btn btn-pass" onclick="submitContest('موافق')">موافق</button>
-                        `;
-                    } else if (gameState.currentBid.decision === 'صن') {
-                        // حساب من يحق له قول (قبلك)
-                        // المقياس: المسافة من الموزع. (الموزع+1 هو الأقرب، ثم +2، ثم +3)
-                        const getDistance = (idx) => (idx - gameState.dealerIndex + 4) % 4 || 4; 
-                        const myDistance = getDistance(myPlayerIndex);
-                        const bidderDistance = getDistance(bidderIndex);
-
-                        // إذا مسافتي أقل من مسافته، فأنا جالس قبله ويحق لي أخذه
-                        if (myDistance < bidderDistance) {
-                            controlsDiv.innerHTML = `
-                                <button class="bid-btn btn-qablak" onclick="submitContest('صن')">قبلك!</button>
-                                <button class="bid-btn btn-pass" onclick="submitContest('موافق')">موافق</button>
-                            `;
-                        } else {
-                            controlsDiv.innerHTML = `<button class="bid-btn btn-pass" onclick="submitContest('موافق')">موافق</button>`;
-                        }
-                    }
-                } else {
-                    controlsDiv.innerHTML = '';
-                    turnIndicator.innerText = `جاري انتظار موافقة البقية...`;
-                }
-            }
-        }
-
-        // دوال إرسال قرار المزاد لقاعدة البيانات جعلناها Window لتصلها أزرار HTML
-        window.submitBid = async function(decision, suit = null) {
-            const updates = {};
-            
-            if (decision === 'بس') {
-                showGameMessage(`${myName} قال: بس`);
-                let nextTurn = (gameState.turnIndex + 1) % 4;
-                let newPasses = (gameState.passes || 0) + 1;
-                
-                if (newPasses >= 4) { // الجميع قال بس
-                    if (gameState.round === 1) {
-                        // الانتقال للفة الثانية، الدور يعود ليمين الموزع
-                        updates['rooms/baloot/gameState/round'] = 2;
-                        updates['rooms/baloot/gameState/passes'] = 0;
-                        updates['rooms/baloot/gameState/turnIndex'] = (gameState.dealerIndex + 1) % 4;
+                // 1. تحديث العداد
+                if (gameState.scores) {
+                    // تحديد من هو "لنا" ومن "لهم" بناء على مقعدي
+                    // إذا كنت أعلى أو أسفل: فريقنا هو (us). فريقهم (them).
+                    // إذا كنت يمين أو يسار: فريقنا هو (them). فريقهم (us).
+                    let myScore = 0, theirScore = 0;
+                    if (mySeat === 'bottom' || mySeat === 'top' || !mySeat) {
+                        myScore = gameState.scores.us || 0; theirScore = gameState.scores.them || 0;
                     } else {
-                        // الجميع بس في الدورة الثانية -> إنهاء وتوزيع جديد
-                        showGameMessage("لم يشتري أحد، سيتم إعادة التوزيع...");
-                        remove(ref(db, 'rooms/baloot/gameState'));
-                        return;
+                        myScore = gameState.scores.them || 0; theirScore = gameState.scores.us || 0;
                     }
+                    document.getElementById('score-us').innerText = myScore;
+                    document.getElementById('score-them').innerText = theirScore;
+                }
+
+                // 2. تحديث ورق اليد
+                if (gameState.hands && gameState.hands[myId]) {
+                    renderMyHand(gameState.hands[myId]);
                 } else {
-                    updates['rooms/baloot/gameState/turnIndex'] = nextTurn;
-                    updates['rooms/baloot/gameState/passes'] = newPasses;
+                    document.getElementById('my-hand').innerHTML = '';
+                }
+
+                // 3. تحديث ساحة اللعب (المزاد أو الرمي)
+                renderCenterBoard();
+                
+                // 4. إظهار المشاريع
+                if (gameState.phase === 'playing' && mySeat) {
+                    document.getElementById('projects-controls').style.display = 'flex';
+                } else {
+                    document.getElementById('projects-controls').style.display = 'none';
+                }
+                
+                updateSeatsUI(); // لتحديث إطار الدور
+            });
+        }
+
+        // --- ريندر الساحة ---
+        function renderCenterBoard() {
+            const cb = document.getElementById('center-board');
+            cb.innerHTML = '';
+
+            // مرحلة المزاد
+            if (gameState.phase === 'bidding' && gameState.buyCard) {
+                const isRed = gameState.buyCard.suit === '♥' || gameState.buyCard.suit === '♦';
+                cb.innerHTML = `
+                    <div class="card ${isRed ? 'red' : ''}" style="transform: scale(1.2);">
+                        <span>${gameState.buyCard.value}</span><span>${gameState.buyCard.suit}</span>
+                    </div>
+                `;
+                // أزرار المزاد تظهر فقط لمن عليه الدور
+                if (gameState.turnSeat === mySeat) {
+                    cb.innerHTML += `
+                        <div class="bidding-controls" style="margin-top:15px;">
+                            <button class="btn-game btn-sun" onclick="submitBid('صن')">صن</button>
+                            <button class="btn-game btn-hokm" onclick="submitBid('حكم', '${gameState.buyCard.suit}')">حكم</button>
+                            <button class="btn-game btn-sun" onclick="submitBid('أشكل')">أشكل</button>
+                            <button class="btn-game" style="background:#7f8c8d;" onclick="submitBid('بس')">بس</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            // مرحلة اللعب (عرض الأوراق المرمية)
+            if (gameState.phase === 'playing' && gameState.currentTrick) {
+                gameState.currentTrick.forEach(play => {
+                    const isRed = play.card.suit === '♥' || play.card.suit === '♦';
+                    // تحديد مكان الورقة بناء على مقعد اللاعب الذي رماها بالنسبة لمقعدي
+                    let posClass = getRelativePositionClass(play.seat);
+                    cb.innerHTML += `
+                        <div class="card played ${posClass} ${isRed ? 'red' : ''}">
+                            <span>${play.card.value}</span><span>${play.card.suit}</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // تحديد مكان ظهور الورقة المرمية (أعلى، أسفل، يمين، يسار) بالنسبة لشاشتي
+        function getRelativePositionClass(playerSeat) {
+            if (!mySeat) return 'played-card-top'; // متفرج
+            if (playerSeat === mySeat) return 'played-card-bottom';
+            
+            const layout = ['bottom', 'left', 'top', 'right'];
+            const myIdx = layout.indexOf(mySeat);
+            const playerIdx = layout.indexOf(playerSeat);
+            
+            const diff = (playerIdx - myIdx + 4) % 4;
+            if (diff === 1) return 'played-card-left';
+            if (diff === 2) return 'played-card-top';
+            if (diff === 3) return 'played-card-right';
+            return 'played-card-top';
+        }
+
+        // --- المزاد ---
+        window.submitBid = async function(decision, suit=null) {
+            if (decision === 'بس') {
+                toast('قلت: بس');
+                const seatsArr = ['bottom', 'right', 'top', 'left'];
+                const nextSeat = seatsArr[(seatsArr.indexOf(mySeat) + 1) % 4];
+                let passes = (gameState.passes || 0) + 1;
+
+                if (passes >= 4) {
+                    toast('تم إعادة التوزيع لأن الجميع قال بس');
+                    // الهوست هو من يوزع من جديد واقعياً، لذلك نمسح اللعبة
+                    await update(ref(db, 'rooms/baloot'), { 'gameState/phase': 'seating' });
+                } else {
+                    await update(ref(db, 'rooms/baloot/gameState'), { turnSeat: nextSeat, passes: passes });
                 }
             } else {
-                // اشترى صن أو حكم
-                showGameMessage(`${myName} اشترى: ${decision}`);
-                updates['rooms/baloot/gameState/phase'] = 'contesting';
-                updates['rooms/baloot/gameState/currentBid'] = { playerId: myId, playerName: myName, decision: decision, suit: suit };
-                updates['rooms/baloot/gameState/contestAnswers'] = null; // تصفير الموافقات
-            }
-            
-            await update(ref(db), updates);
-        };
-
-        // إظهار خيارات "حكم ثاني" (الأشكال ما عدا المرفوض)
-        window.showHokmThaniMenu = function() {
-            const controlsDiv = document.getElementById('bidding-controls');
-            const rejectedSuit = gameState.buyCard.suit;
-            const suits = [
-                { s: '♠', c: 'black' }, { s: '♣', c: 'black' },
-                { s: '♥', c: 'red' }, { s: '♦', c: 'red' }
-            ];
-            
-            let html = `<div style="display:flex; gap:10px; background:#fff; border-radius:5px; padding:5px;">`;
-            suits.forEach(st => {
-                if (st.s !== rejectedSuit) {
-                    html += `<button class="suit-btn ${st.c}" onclick="submitBid('حكم', '${st.s}')">${st.s}</button>`;
-                }
-            });
-            html += `<button onclick="processGameState()" style="background:gray; color:white; border:none; padding:5px; cursor:pointer;">إلغاء</button></div>`;
-            controlsDiv.innerHTML = html;
-        };
-
-        // الرد على المعارضة (صن، أو قبلك، أو موافق)
-        window.submitContest = async function(response) {
-            if (response === 'موافق') {
-                // تسجيل الموافقة
-                await set(ref(db, `rooms/baloot/gameState/contestAnswers/${myId}`), true);
+                toast(`اشتريت: ${decision}`);
+                // استكمال التوزيع فوراً (اللعب المفتوح)
+                let deck = gameState.deckRest;
+                let hands = gameState.hands;
                 
-                // تحقق هل الجميع وافق (3 لاعبين غير المشتري)
-                const stateSnap = await get(ref(db, 'rooms/baloot/gameState'));
-                const currentState = stateSnap.val();
-                if (currentState.contestAnswers && Object.keys(currentState.contestAnswers).length >= 3) {
-                    showGameMessage(`تم اعتماد الشراء لـ ${currentState.currentBid.playerName} (${currentState.currentBid.decision})`);
-                    // الانتقال لمرحلة اللعب وتوزيع باقي الورق (سيتم برمجتها لاحقاً)
-                    await update(ref(db), { 'rooms/baloot/gameState/phase': 'playing' });
-                }
-            } else if (response === 'صن') {
-                // عارض الحكم واشترى صن، أو قال قبلك
-                showGameMessage(`${myName} عارض واشترى: صن!`);
-                const updates = {};
-                updates['rooms/baloot/gameState/currentBid'] = { playerId: myId, playerName: myName, decision: 'صن' };
-                updates['rooms/baloot/gameState/contestAnswers'] = null; // إعادة المزاد لمن قبله
-                await update(ref(db), updates);
+                // إعطاء المشتري ورقة المشترى + 2، والبقية 3
+                ['bottom', 'top', 'right', 'left'].forEach(async (s) => {
+                    const sId = (await get(ref(db, `rooms/baloot/seats/${s}`))).val().id;
+                    if (s === mySeat) {
+                        hands[sId].push(gameState.buyCard);
+                        hands[sId].push(...deck.splice(0, 2));
+                    } else {
+                        hands[sId].push(...deck.splice(0, 3));
+                    }
+                });
+
+                // اللعب يبدأ من نفس اللاعب الذي عليه الدور (أو من يمين الموزع حسب إرادتك، هنا نتركه لمن اشترى للتسهيل أو نغيره)
+                await update(ref(db, 'rooms/baloot/gameState'), { phase: 'playing', hands: hands });
             }
         };
 
-        function showGameMessage(msg) {
-            gameMsgDiv.innerText = msg;
-            gameMsgDiv.style.display = "block";
-            setTimeout(() => { gameMsgDiv.style.display = "none"; }, 4000);
-        }
-
-        // ==========================================
-        // باقي دوال العرض والصوت (نفسها بدون تغيير)
-        // ==========================================
+        // --- اللعب الحر (رمي الأوراق) ---
         function renderMyHand(cards) {
-            myHandDiv.innerHTML = '';
+            const handDiv = document.getElementById('my-hand');
+            handDiv.innerHTML = '';
+            
+            // ترتيب الأوراق
             const suitOrder = { '♠': 1, '♥': 2, '♣': 3, '♦': 4 };
             const valueOrder = { 'A': 8, '10': 7, 'K': 6, 'Q': 5, 'J': 4, '9': 3, '8': 2, '7': 1 };
-            
             cards.sort((a, b) => {
                 if (suitOrder[a.suit] !== suitOrder[b.suit]) return suitOrder[a.suit] - suitOrder[b.suit];
                 return valueOrder[b.value] - valueOrder[a.value];
             });
 
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
                 const cardEl = document.createElement('div');
                 const isRed = card.suit === '♥' || card.suit === '♦';
                 cardEl.className = 'card' + (isRed ? ' red' : '');
                 cardEl.innerHTML = `<span>${card.value}</span><span>${card.suit}</span>`;
-                myHandDiv.appendChild(cardEl);
+                
+                cardEl.onclick = () => playCard(card, index);
+                handDiv.appendChild(cardEl);
             });
         }
 
-        muteBtn.addEventListener('click', () => {
-            if (localStream) {
-                isMuted = !isMuted;
-                localStream.getAudioTracks()[0].enabled = !isMuted;
-                muteBtn.innerText = isMuted ? "فتح الميكروفون 🔇" : "كتم الميكروفون 🎤";
-                muteBtn.style.backgroundColor = isMuted ? "#7f8fa6" : "var(--accent)";
+        window.playCard = async function(card, index) {
+            if (gameState.phase !== 'playing' || gameState.turnSeat !== mySeat) {
+                toast("ليس دورك!"); return;
+            }
+
+            // سحب الورقة من يدي
+            let myCards = gameState.hands[myId];
+            myCards.splice(index, 1);
+            
+            // إضافتها للساحة
+            let currentTrick = gameState.currentTrick || [];
+            currentTrick.push({ seat: mySeat, playerName: myName, card: card });
+
+            const seatsArr = ['bottom', 'right', 'top', 'left'];
+            let nextSeat = seatsArr[(seatsArr.indexOf(mySeat) + 1) % 4];
+
+            // إذا اكتملت الـ 4 أوراق
+            if (currentTrick.length === 4) {
+                // حفظها في اللعبات السابقة لغرض (القيد)
+                let pastTricks = gameState.pastTricks || [];
+                pastTricks.push(currentTrick);
+                
+                // تحديد من أكل (مبدئياً الفائز هو من لعب الورقة الأعلى من نفس النوع الأول - صن بسيط)
+                // في اللعب المفتوح، يمكن للاعبين أن يقرروا، لكن لنبرمجها لتمرير الدور للفائز تلقائياً
+                nextSeat = determineTrickWinner(currentTrick); 
+                
+                await update(ref(db, 'rooms/baloot/gameState'), {
+                    hands: { ...gameState.hands, [myId]: myCards },
+                    currentTrick: currentTrick,
+                    pastTricks: pastTricks
+                });
+
+                // مسح الساحة بعد ثانيتين للعبة الجديدة
+                setTimeout(async () => {
+                    await update(ref(db, 'rooms/baloot/gameState'), { currentTrick: [], turnSeat: nextSeat });
+                }, 2000);
+
+            } else {
+                // لم تكتمل
+                await update(ref(db, 'rooms/baloot/gameState'), {
+                    hands: { ...gameState.hands, [myId]: myCards },
+                    currentTrick: currentTrick,
+                    turnSeat: nextSeat
+                });
+            }
+        };
+
+        // دالة بسيطة لمعرفة من فاز بالأكلة لتمرير الدور له
+        function determineTrickWinner(trick) {
+            // للتسهيل في اللعب الحر: نعتبر الورقة الأولى هي القائدة ونقارن قيمتها بالصن
+            const leadSuit = trick[0].card.suit;
+            const values = { '7':1, '8':2, '9':3, '10':7, 'J':4, 'Q':5, 'K':6, 'A':8 };
+            let winnerSeat = trick[0].seat;
+            let highestVal = values[trick[0].card.value];
+
+            for(let i=1; i<4; i++){
+                if(trick[i].card.suit === leadSuit && values[trick[i].card.value] > highestVal){
+                    highestVal = values[trick[i].card.value];
+                    winnerSeat = trick[i].seat;
+                }
+            }
+            return winnerSeat;
+        }
+
+        // --- المشاريع ---
+        window.announceProject = function(projName) {
+            toast(`أعلنت: ${projName}`);
+            // إرسال الإعلان للجميع (يحفظ في قاعدة البيانات ويظهر كإشعار)
+            push(ref(db, 'rooms/baloot/projects'), { name: myName, proj: projName, time: Date.now() });
+        };
+        onChildAdded(ref(db, 'rooms/baloot/projects'), snap => {
+            const data = snap.val();
+            if (Date.now() - data.time < 5000) { // فقط للمشاريع الجديدة
+                toast(`📢 ${data.name} أعلن: ${data.proj}`, 4000);
             }
         });
 
+        // --- شاشة القيد (عرض اللعبات) ---
+        function renderQaydModal() {
+            const container = document.getElementById('qayd-tricks-container');
+            container.innerHTML = '';
+            if (!gameState || !gameState.pastTricks || gameState.pastTricks.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:white;">لا يوجد لعبات مسجلة في هذه الجولة بعد.</p>';
+                return;
+            }
+
+            gameState.pastTricks.forEach((trick, index) => {
+                let row = `<div class="trick-row"><div style="color:white; width:20px;">${index+1}</div>`;
+                trick.forEach(play => {
+                    const isRed = play.card.suit === '♥' || play.card.suit === '♦';
+                    row += `
+                        <div class="trick-card-wrap">
+                            <div>${play.playerName}</div>
+                            <div class="card ${isRed?'red':''}" style="box-shadow:none;">
+                                <span>${play.card.value}</span><span>${play.card.suit}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                row += `</div>`;
+                container.innerHTML += row;
+            });
+        }
+
+        // --- أدوات مساعدة ---
+        function toast(msg, time=3000) {
+            const el = document.getElementById('toast-msg');
+            el.innerText = msg; el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, time);
+        }
+
+        // الصوت (يبقى كما هو من أكوادك السابقة)
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+        document.getElementById('mute-btn').addEventListener('click', () => {
+            if (localStream) {
+                isMuted = !isMuted;
+                localStream.getAudioTracks()[0].enabled = !isMuted;
+                document.getElementById('mute-btn').innerText = isMuted ? "فتح الميكروفون 🔇" : "كتم الميكروفون 🎤";
+            }
+        });
+        
         function setupRoomListeners() {
-            const playersRef = ref(db, 'rooms/baloot/players');
-            onValue(playersRef, (snapshot) => {
-                playersUl.innerHTML = "";
-                if (snapshot.exists()) {
-                    const players = snapshot.val();
-                    Object.values(players).forEach(player => {
-                        const li = document.createElement('li');
-                        li.className = 'player-item';
-                        li.innerHTML = `<span>${player.name}</span><span class="status">متصل 🟢</span>`;
-                        playersUl.appendChild(li);
+            onValue(ref(db, 'rooms/baloot/players'), snap => {
+                const ul = document.getElementById('players-ul');
+                ul.innerHTML = '';
+                if(snap.exists()){
+                    Object.values(snap.val()).forEach(p => {
+                        ul.innerHTML += `<div class="player-item">🟢 ${p.name}</div>`;
                     });
                 }
             });
         }
 
         function setupWebRTCListeners() {
-            const playersRef = ref(db, 'rooms/baloot/players');
-            onChildAdded(playersRef, (snapshot) => {
+            onChildAdded(ref(db, 'rooms/baloot/players'), (snapshot) => {
                 const remotePlayer = snapshot.val();
                 if (remotePlayer.id !== myId && myId > remotePlayer.id) initiateCall(remotePlayer.id);
             });
 
-            const signalsRef = ref(db, `rooms/baloot/signals/${myId}`);
-            onChildAdded(signalsRef, async (snapshot) => {
+            onChildAdded(ref(db, `rooms/baloot/signals/${myId}`), async (snapshot) => {
                 const data = snapshot.val();
-                const signalKey = snapshot.key;
                 const senderId = data.sender;
-
                 if (!peers[senderId]) createPeerConnection(senderId);
                 const pc = peers[senderId];
 
@@ -830,9 +688,8 @@
                     } else if (data.type === 'ice' && data.ice && data.ice.candidate) {
                         await pc.addIceCandidate(new RTCIceCandidate(data.ice));
                     }
-                } catch (error) { console.warn("تجاهل خطأ اتصال:", error); }
-
-                remove(ref(db, `rooms/baloot/signals/${myId}/${signalKey}`));
+                } catch (error) {}
+                remove(ref(db, `rooms/baloot/signals/${myId}/${snapshot.key}`));
             });
         }
 
@@ -840,49 +697,28 @@
             const pc = new RTCPeerConnection(rtcConfig);
             peers[remoteId] = pc;
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
             pc.ontrack = (event) => {
-                let audioElement = document.getElementById(`audio-${remoteId}`);
-                if (!audioElement) {
-                    audioElement = document.createElement('audio');
-                    audioElement.id = `audio-${remoteId}`;
-                    audioElement.autoplay = true;
-                    audioElement.playsInline = true; 
-                    audioElements.appendChild(audioElement);
+                let ae = document.getElementById(`audio-${remoteId}`);
+                if (!ae) {
+                    ae = document.createElement('audio'); ae.id = `audio-${remoteId}`;
+                    ae.autoplay = true; ae.playsInline = true; 
+                    document.getElementById('audio-elements').appendChild(ae);
                 }
-                audioElement.srcObject = event.streams[0];
-                setTimeout(() => { audioElement.play().catch(e=>console.warn(e)); }, 500);
+                ae.srcObject = event.streams[0];
             };
-
-            pc.onicecandidate = (event) => {
-                if (event.candidate && event.candidate.candidate) {
-                    sendSignal(remoteId, { 
-                        type: 'ice', 
-                        ice: { candidate: event.candidate.candidate, sdpMid: event.candidate.sdpMid, sdpMLineIndex: event.candidate.sdpMLineIndex }
-                    });
-                }
+            pc.onicecandidate = (e) => {
+                if (e.candidate) sendSignal(remoteId, { type: 'ice', ice: { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex }});
             };
             return pc;
         }
-
         async function initiateCall(remoteId) {
             const pc = createPeerConnection(remoteId);
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             sendSignal(remoteId, { type: 'offer', offer: offer });
         }
-
         function sendSignal(targetId, payload) {
-            const signalRef = ref(db, `rooms/baloot/signals/${targetId}`);
-            payload.sender = myId;
-            push(signalRef, payload);
-        }
-
-        function showError(msg) {
-            const errorMsg = document.getElementById('error-msg');
-            errorMsg.innerText = msg;
-            errorMsg.style.display = "block";
-            setTimeout(() => { errorMsg.style.display = "none"; }, 5000);
+            payload.sender = myId; push(ref(db, `rooms/baloot/signals/${targetId}`), payload);
         }
     </script>
 </body>
