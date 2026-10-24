@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - النظام الطبي الموحد</title>
+    <style>
+        :root {
+            --primary-color: #0284c7;
+            --primary-dark: #0369a1;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #welcome-user {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1.2rem;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-right: 4px solid var(--primary-color);
+        }
+
+        .stat-card h4 {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-completed { background-color: #dcfce7; color: #15803d; }
+        .badge-pending { background-color: #fef9c3; color: #a16207; }
+        .badge-urgent { background-color: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <span>🏥 سجل المرضى والطلبات الطبية</span>
+        </div>
+        <div class="user-controls">
+            <span id="welcome-user">مرحباً بك</span>
+            <button type="button" class="btn-logout" onclick="logout()">تسجيل خروج</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>إجمالي المرضى اليوم</h4>
+                <div class="number">42</div>
+            </div>
+            <div class="stat-card" style="border-right-color: #eab308;">
+                <h4>بانتظار الفحص (Pending)</h4>
+                <div class="number">8</div>
+            </div>
+            <div class="stat-card" style="border-right-color: #ef4444;">
+                <h4>حالات طارئة (STAT)</h4>
+                <div class="number">3</div>
+            </div>
+            <div class="stat-card" style="border-right-color: #22c55e;">
+                <h4>فحوصات مكتملة</h4>
+                <div class="number">31</div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <h3>قائمة طلبات المرضى الحالية</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>رقم الملف (MRN)</th>
+                            <th>اسم المريض</th>
+                            <th>العمر</th>
+                            <th>القسم المحول منه</th>
+                            <th>الإجراء المطلوب</th>
+                            <th>الطبيب المعالج</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#104928</td>
+                            <td>محمد بن عبدالله الشهري</td>
+                            <td>54 سنة</td>
+                            <td>الطوارئ (ER)</td>
+                            <td>تخطيط قلب (12-Lead ECG)</td>
+                            <td>د. طارق العلي</td>
+                            <td><span class="badge badge-urgent">عاجل (STAT)</span></td>
+                        </tr>
+                        <tr>
+                            <td>#108374</td>
+                            <td>فاطمة بنت علي القحطاني</td>
+                            <td>38 سنة</td>
+                            <td>العيادات الخارجية (OPD)</td>
+                            <td>تحاليل دم شاملة (CBC)</td>
+                            <td>د. سارة الدوسري</td>
+                            <td><span class="badge badge-pending">قيد الانتظار</span></td>
+                        </tr>
+                        <tr>
+                            <td>#102938</td>
+                            <td>سعيد بن أحمد الغامدي</td>
+                            <td>67 سنة</td>
+                            <td>العناية المركزة (ICU)</td>
+                            <td>تخطيط قلب + إنزيمات قلب</td>
+                            <td>د. خالد المنصور</td>
+                            <td><span class="badge badge-completed">مكتمل</span></td>
+                        </tr>
+                        <tr>
+                            <td>#109921</td>
+                            <td>خالد بن فيصل العتيبي</td>
+                            <td>29 سنة</td>
+                            <td>الباطنية (Internal Med)</td>
+                            <td>أشعة صدر (Chest X-Ray)</td>
+                            <td>د. منى الحربي</td>
+                            <td><span class="badge badge-completed">مكتمل</span></td>
+                        </tr>
+                        <tr>
+                            <td>#105543</td>
+                            <td>نورة بنت سعد الأسمري</td>
+                            <td>45 سنة</td>
+                            <td>الطوارئ (ER)</td>
+                            <td>تخطيط قلب (ECG)</td>
+                            <td>د. طارق العلي</td>
+                            <td><span class="badge badge-pending">قيد الانتظار</span></td>
+                        </tr>
+                        <tr>
+                            <td>#107652</td>
+                            <td>عبدالرحمن بن صالح العمري</td>
+                            <td>71 سنة</td>
+                            <td>تنويم رجال (Male Ward)</td>
+                            <td>مراقبة هولتر (Holter 24h)</td>
+                            <td>د. خالد المنصور</td>
+                            <td><span class="badge badge-urgent">عاجل (STAT)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // قراءة اسم المستخدم من رابط الصفحة (URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const user = urlParams.get('user');
+        
+        if (user) {
+            document.getElementById('welcome-user').textContent = "المستخدم: " + decodeURIComponent(user);
+        }
+
+        // دالة تسجيل الخروج للعودة لصفحة الدخول
+        function logout() {
+            window.location.href = "index.html";
+        }
+    </script>
+
+</body>
+</html>
