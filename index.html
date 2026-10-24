@@ -3,315 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة بلوت - الغرفة الصوتية</title>
+    <title>النظام الطبي الموحد - بوابة الموظفين</title>
     <style>
         :root {
-            --bg-color: #1a1a2e;
-            --panel-bg: #16213e;
-            --primary: #0f3460;
-            --accent: #e94560;
-            --text: #ffffff;
+            --primary-color: #0284c7;
+            --primary-dark: #0369a1;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- تنسيقات صفحة تسجيل الدخول --- */
+        #login-section {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%);
         }
-        .container {
-            background-color: var(--panel-bg);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 500px;
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
         }
-        h1 { color: var(--accent); margin-bottom: 20px; }
-        input {
-            width: 80%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+
+        .login-card h2 {
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
         }
-        button {
-            background-color: var(--accent);
+
+        .login-card p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 25px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
         }
-        button:hover { background-color: #d13d56; }
-        #room-screen { display: none; }
-        .player-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
+
+        .btn-login:hover {
+            background-color: var(--primary-dark);
         }
-        .player-item {
-            background-color: var(--primary);
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 8px;
+
+        /* --- تنسيقات لوحة التحكم (الداشبورد) --- */
+        #dashboard-section {
+            display: none; /* مخفية افتراضياً وتظهر بعد تسجيل الدخول */
+            flex: 1;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #welcome-user {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1.2rem;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* بطاقات الإحصائيات السريعة */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-right: 4px solid var(--primary-color);
+        }
+
+        .stat-card h4 {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* تنسيق الجدول */
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .status {
-            font-size: 12px;
-            color: #4caf50;
+
+        .table-header h3 {
+            color: var(--text-color);
         }
-        #audio-elements { display: none; } 
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* شارات الحالة (Badges) */
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-completed { background-color: #dcfce7; color: #15803d; }
+        .badge-pending { background-color: #fef9c3; color: #a16207; }
+        .badge-urgent { background-color: #fee2e2; color: #b91c1c; }
+
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="container">
-        <h1>🎮 غرفة البلوت</h1>
-        <p>الحد الأقصى للغرفة: 8 لاعبين</p>
-        <input type="text" id="player-name" placeholder="أدخل اسمك هنا...">
-        <button id="join-btn">دخول الغرفة</button>
-        <p id="error-msg" style="color: var(--accent); display: none; margin-top: 15px;"></p>
+    <!-- 1. قسم تسجيل الدخول -->
+    <div id="login-section">
+        <div class="login-card">
+            <h2>النظام الطبي الموحد</h2>
+            <p>يرجى إدخال بياناتك للوصول إلى سجلات المرضى</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">اسم المستخدم أو الرقم الوظيفي</label>
+                    <input type="text" id="username" placeholder="أدخل أي اسم مستخدم..." required>
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <input type="password" id="password" placeholder="أدخل أي كلمة مرور..." required>
+                </div>
+                <button type="submit" class="btn-login">تسجيل الدخول</button>
+            </form>
+        </div>
     </div>
 
-    <div id="room-screen" class="container">
-        <h1>♠️ طاولة اللعب ♥️</h1>
-        <p>أنت متصل الآن بالمحادثة الصوتية</p>
-        <button id="mute-btn">كتم الميكروفون 🎤</button>
-        <ul id="players-ul" class="player-list"></ul>
-    </div>
-
-    <div id="audio-elements"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, get, onValue, onDisconnect, push, child, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyD3qG2s1puphlNnvCE2N8bznoHnF-cxeJw",
-            authDomain: "balo-ot.firebaseapp.com",
-            databaseURL: "https://balo-ot-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "balo-ot",
-            storageBucket: "balo-ot.firebasestorage.app",
-            messagingSenderId: "444649840040",
-            appId: "1:444649840040:web:f9d8ff3dd47ef691a5119d",
-            measurementId: "G-ZFVF6QQT48"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        let myId = null;
-        let myName = "";
-        let localStream = null;
-        let isMuted = false;
-        const peers = {}; 
-        const maxPlayers = 8;
-        
-        const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
-
-        const loginScreen = document.getElementById('login-screen');
-        const roomScreen = document.getElementById('room-screen');
-        const playerNameInput = document.getElementById('player-name');
-        const joinBtn = document.getElementById('join-btn');
-        const errorMsg = document.getElementById('error-msg');
-        const playersUl = document.getElementById('players-ul');
-        const muteBtn = document.getElementById('mute-btn');
-        const audioElements = document.getElementById('audio-elements');
-
-        joinBtn.addEventListener('click', async () => {
-            myName = playerNameInput.value.trim();
-            if (!myName) {
-                showError("الرجاء إدخال اسمك!");
-                return;
-            }
-
-            joinBtn.disabled = true;
-            joinBtn.innerText = "جاري التحقق...";
-
-            const playersRef = ref(db, 'rooms/baloot/players');
-            const snapshot = await get(playersRef);
-            
-            let currentPlayersCount = 0;
-            if (snapshot.exists()) {
-                currentPlayersCount = Object.keys(snapshot.val()).length;
-            }
-
-            if (currentPlayersCount >= maxPlayers) {
-                showError("عذراً، الغرفة ممتلئة حالياً (8/8).");
-                joinBtn.disabled = false;
-                joinBtn.innerText = "دخول الغرفة";
-                return;
-            }
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-            } catch (err) {
-                showError("يجب السماح باستخدام الميكروفون للعب.");
-                joinBtn.disabled = false;
-                joinBtn.innerText = "دخول الغرفة";
-                return;
-            }
-
-            const newPlayerRef = push(playersRef);
-            myId = newPlayerRef.key;
-            
-            await set(newPlayerRef, {
-                id: myId,
-                name: myName,
-                joinedAt: Date.now()
-            });
-
-            onDisconnect(newPlayerRef).remove();
-            // مسح أي إشارات سابقة معلقة عند قطع الاتصال
-            onDisconnect(ref(db, `rooms/baloot/signals/${myId}`)).remove();
-
-            loginScreen.style.display = "none";
-            roomScreen.style.display = "block";
-
-            setupRoomListeners();
-            setupWebRTCListeners();
-        });
-
-        muteBtn.addEventListener('click', () => {
-            if (localStream) {
-                isMuted = !isMuted;
-                localStream.getAudioTracks()[0].enabled = !isMuted;
-                muteBtn.innerText = isMuted ? "فتح الميكروفون 🔇" : "كتم الميكروفون 🎤";
-                muteBtn.style.backgroundColor = isMuted ? "#7f8fa6" : "var(--accent)";
-            }
-        });
-
-        function setupRoomListeners() {
-            const playersRef = ref(db, 'rooms/baloot/players');
-            onValue(playersRef, (snapshot) => {
-                playersUl.innerHTML = "";
-                if (snapshot.exists()) {
-                    const players = snapshot.val();
-                    Object.values(players).forEach(player => {
-                        const li = document.createElement('li');
-                        li.className = 'player-item';
-                        li.innerHTML = `
-                            <span>${player.name} ${player.id === myId ? '(أنت)' : ''}</span>
-                            <span class="status">متصل 🟢</span>
-                        `;
-                        playersUl.appendChild(li);
-                    });
-                }
-            });
-        }
-
-        function setupWebRTCListeners() {
-            const playersRef = ref(db, 'rooms/baloot/players');
-            onChildAdded(playersRef, (snapshot) => {
-                const remotePlayer = snapshot.val();
-                // منع التصادم: الجهاز الذي يملك ID أكبر هو فقط من يرسل طلب الاتصال الأول
-                if (remotePlayer.id !== myId && myId > remotePlayer.id) {
-                    initiateCall(remotePlayer.id);
-                }
-            });
-
-            const signalsRef = ref(db, `rooms/baloot/signals/${myId}`);
-            onChildAdded(signalsRef, async (snapshot) => {
-                const data = snapshot.val();
-                const signalKey = snapshot.key;
-                const senderId = data.sender;
-
-                if (!peers[senderId]) {
-                    createPeerConnection(senderId);
-                }
-
-                const pc = peers[senderId];
-
-                try {
-                    if (data.type === 'offer') {
-                        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                        const answer = await pc.createAnswer();
-                        await pc.setLocalDescription(answer);
-                        sendSignal(senderId, { type: 'answer', answer: answer });
-                    } else if (data.type === 'answer') {
-                        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-                    } else if (data.type === 'ice' && data.ice && data.ice.candidate) {
-                        // إضافة بيانات الشبكة فقط إذا كانت غير فارغة
-                        await pc.addIceCandidate(new RTCIceCandidate(data.ice));
-                    }
-                } catch (error) {
-                    console.warn("تم تجاهل خطأ في الاتصال:", error);
-                }
-
-                // تنظيف قاعدة البيانات فوراً
-                remove(ref(db, `rooms/baloot/signals/${myId}/${signalKey}`));
-            });
-        }
-
-        function createPeerConnection(remoteId) {
-            const pc = new RTCPeerConnection(rtcConfig);
-            peers[remoteId] = pc;
-
-            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-            pc.ontrack = (event) => {
-                let audioElement = document.getElementById(`audio-${remoteId}`);
-                if (!audioElement) {
-                    audioElement = document.createElement('audio');
-                    audioElement.id = `audio-${remoteId}`;
-                    audioElement.autoplay = true;
-                    audioElement.playsInline = true; // دعم الأجهزة المحمولة
-                    audioElements.appendChild(audioElement);
-                }
-                audioElement.srcObject = event.streams[0];
-                
-                setTimeout(() => {
-                    audioElement.play().catch(error => {
-                        console.warn("تأكد من عدم وجود كتم تلقائي للصوت:", error);
-                    });
-                }, 500);
-            };
-
-            pc.onicecandidate = (event) => {
-                // إرسال البيانات فقط إذا كانت صالحة وتجنب القيم الفارغة (null)
-                if (event.candidate && event.candidate.candidate) {
-                    sendSignal(remoteId, { 
-                        type: 'ice', 
-                        ice: {
-                            candidate: event.candidate.candidate,
-                            sdpMid: event.candidate.sdpMid,
-                            sdpMLineIndex: event.candidate.sdpMLineIndex
-                        }
-                    });
-                }
-            };
-
-            return pc;
-        }
-
-        async function initiateCall(remoteId) {
-            const pc = createPeerConnection(remoteId);
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            sendSignal(remoteId, { type: 'offer', offer: offer });
-        }
-
-        function sendSignal(targetId, payload) {
-            const signalRef = ref(db, `rooms/baloot/signals/${targetId}`);
-            payload.sender = myId;
-            push(signalRef, payload);
-        }
-
-        function showError(msg) {
-            errorMsg.innerText = msg;
-            errorMsg.style.display = "block";
-            setTimeout(() => { errorMsg.style.display = "none"; }, 5000);
-        }
-    </script>
-</body>
-</html>
+    <!-- 2. قسم لوحة التحكم والبيانات -->
+    <div id="dashboard-section">
+        <header>
+            <div
